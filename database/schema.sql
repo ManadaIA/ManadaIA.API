@@ -1,314 +1,107 @@
 -- ═══════════════════════════════════════════════════════════════
 -- ManadaIA - Schema do Banco de Dados Supabase
--- Sistema de Gestão de Rebanho Bovino
+-- Sistema de Gestão de Rebanho (Bovino, Ovino, Caprino)
 -- ═══════════════════════════════════════════════════════════════
 
 -- Execute este script no SQL Editor do Supabase Dashboard
 
 -- ───────────────────────────────────────────────────────────────
--- 1. TABELA: propriedades
+-- 1. TABELA: animals
 -- ───────────────────────────────────────────────────────────────
-CREATE TABLE propriedades (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    nome            TEXT NOT NULL,
-    cidade          TEXT NOT NULL,
-    estado          CHAR(2) NOT NULL,
-    area_hectares   NUMERIC(10, 2),
-    inscricao       TEXT,
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    proprietario_id UUID NOT NULL, -- Referência ao auth.users do Supabase
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ
+CREATE TABLE animals (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID NOT NULL REFERENCES auth.users(id),
+    code        VARCHAR(50) NOT NULL UNIQUE,
+    name        VARCHAR(100),
+    species     VARCHAR(20) NOT NULL CHECK (species IN ('BOVINO','OVINO','CAPRINO')),
+    sex         VARCHAR(10) NOT NULL CHECK (sex IN ('FEMEA','MACHO')),
+    breed       VARCHAR(100),
+    lineage     TEXT,
+    birth_date  DATE,
+    weight_kg   NUMERIC(6,2),
+    notes       TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ
 );
 
-CREATE INDEX idx_propriedades_proprietario ON propriedades(proprietario_id);
-CREATE INDEX idx_propriedades_active ON propriedades(is_active);
+CREATE INDEX idx_animals_user ON animals(user_id);
+CREATE INDEX idx_animals_code ON animals(code);
+CREATE INDEX idx_animals_species ON animals(species);
 
 -- ───────────────────────────────────────────────────────────────
--- 2. TABELA: lotes
+-- 2. TABELA: reproductive_cycles
 -- ───────────────────────────────────────────────────────────────
-CREATE TABLE lotes (
+CREATE TABLE reproductive_cycles (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    nome            TEXT NOT NULL,
-    descricao       TEXT,
-    propriedade_id  UUID NOT NULL REFERENCES propriedades(id) ON DELETE CASCADE,
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ
-);
-
-CREATE INDEX idx_lotes_propriedade ON lotes(propriedade_id);
-CREATE INDEX idx_lotes_active ON lotes(is_active);
-
--- ───────────────────────────────────────────────────────────────
--- 3. TABELA: animais
--- ───────────────────────────────────────────────────────────────
-CREATE TABLE animais (
-    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    brinco              TEXT NOT NULL UNIQUE,
-    nome                TEXT NOT NULL,
-    raca                TEXT NOT NULL,
-    sexo                INT NOT NULL CHECK (sexo IN (1, 2)), -- 1=Macho, 2=Fêmea
-    data_nascimento     DATE NOT NULL,
-    peso_atual          NUMERIC(10, 2),
-    status              INT NOT NULL DEFAULT 1 CHECK (status IN (1, 2, 3, 4)), -- 1=Ativo, 2=Vendido, 3=Morto, 4=Inativo
-    propriedade_id      UUID NOT NULL REFERENCES propriedades(id) ON DELETE CASCADE,
-    lote_id             UUID REFERENCES lotes(id) ON DELETE SET NULL,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMPTZ
-);
-
-CREATE INDEX idx_animais_brinco ON animais(brinco);
-CREATE INDEX idx_animais_propriedade ON animais(propriedade_id);
-CREATE INDEX idx_animais_lote ON animais(lote_id);
-CREATE INDEX idx_animais_status ON animais(status);
-
--- ───────────────────────────────────────────────────────────────
--- 4. TABELA: pesagens
--- ───────────────────────────────────────────────────────────────
-CREATE TABLE pesagens (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    animal_id       UUID NOT NULL REFERENCES animais(id) ON DELETE CASCADE,
-    peso            NUMERIC(10, 2) NOT NULL CHECK (peso > 0),
-    data_pesagem    TIMESTAMPTZ NOT NULL,
-    observacoes     TEXT,
+    animal_id       UUID NOT NULL REFERENCES animals(id) ON DELETE CASCADE,
+    event_date      DATE NOT NULL,
+    event_type      VARCHAR(30) NOT NULL CHECK (event_type IN ('INSEMINACAO','PARTO','DIAGNOSTICO','RETORNO')),
+    sire_name       VARCHAR(100),
+    semen_batch     VARCHAR(50),
+    technique       VARCHAR(30) CHECK (technique IN ('IATF','IA','MONTA')),
+    technician      VARCHAR(100),
+    result          VARCHAR(20) CHECK (result IN ('PRENHA','VAZIA','AGUARDANDO','PERDIDA')),
+    notes           TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_pesagens_animal ON pesagens(animal_id);
-CREATE INDEX idx_pesagens_data ON pesagens(data_pesagem DESC);
+CREATE INDEX idx_cycles_animal ON reproductive_cycles(animal_id);
+CREATE INDEX idx_cycles_event_date ON reproductive_cycles(event_date DESC);
+CREATE INDEX idx_cycles_event_type ON reproductive_cycles(event_type);
 
 -- ───────────────────────────────────────────────────────────────
--- 5. TABELA: vacinas
+-- 3. TABELA: ai_predictions
 -- ───────────────────────────────────────────────────────────────
-CREATE TABLE vacinas (
+CREATE TABLE ai_predictions (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    animal_id           UUID NOT NULL REFERENCES animais(id) ON DELETE CASCADE,
-    nome_vacina         TEXT NOT NULL,
-    data_aplicacao      TIMESTAMPTZ NOT NULL,
-    data_proxima_dose   TIMESTAMPTZ,
-    lote                TEXT,
-    veterinario         TEXT,
-    observacoes         TEXT,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    animal_id           UUID NOT NULL REFERENCES animals(id) ON DELETE CASCADE,
+    cycle_id            UUID REFERENCES reproductive_cycles(id) ON DELETE SET NULL,
+    prediction_date     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    pregnancy_rate      NUMERIC(5,2) CHECK (pregnancy_rate >= 0 AND pregnancy_rate <= 100),
+    confidence_level    VARCHAR(10) CHECK (confidence_level IN ('ALTA','MEDIA','BAIXA')),
+    explanation         TEXT,
+    risk_factors        TEXT,  -- JSON serializado
+    recommendations     TEXT,  -- JSON serializado
+    ai_model_used       VARCHAR(50),
+    raw_prompt          TEXT,
+    raw_response        TEXT
 );
 
-CREATE INDEX idx_vacinas_animal ON vacinas(animal_id);
-CREATE INDEX idx_vacinas_proxima_dose ON vacinas(data_proxima_dose);
+CREATE INDEX idx_predictions_animal ON ai_predictions(animal_id);
+CREATE INDEX idx_predictions_cycle ON ai_predictions(cycle_id);
+CREATE INDEX idx_predictions_date ON ai_predictions(prediction_date DESC);
 
 -- ═══════════════════════════════════════════════════════════════
--- ROW LEVEL SECURITY (RLS)
+-- ROW LEVEL SECURITY (RLS) - LGPD
 -- ═══════════════════════════════════════════════════════════════
 
--- Habilitar RLS em todas as tabelas
-ALTER TABLE propriedades ENABLE ROW LEVEL SECURITY;
-ALTER TABLE lotes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE animais ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pesagens ENABLE ROW LEVEL SECURITY;
-ALTER TABLE vacinas ENABLE ROW LEVEL SECURITY;
+-- Ativar RLS em todas as tabelas
+ALTER TABLE animals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reproductive_cycles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_predictions ENABLE ROW LEVEL SECURITY;
 
--- ───────────────────────────────────────────────────────────────
--- Policies: PROPRIEDADES
--- ───────────────────────────────────────────────────────────────
+-- Política: usuário vê apenas seus próprios animais
+CREATE POLICY "users_own_animals" ON animals
+    FOR ALL USING (auth.uid() = user_id);
 
--- Usuário pode ver apenas suas propriedades
-CREATE POLICY "user_read_own_propriedades"
-    ON propriedades FOR SELECT
-    TO authenticated
-    USING (auth.uid() = proprietario_id);
-
--- Usuário pode criar suas próprias propriedades
-CREATE POLICY "user_create_own_propriedades"
-    ON propriedades FOR INSERT
-    TO authenticated
-    WITH CHECK (auth.uid() = proprietario_id);
-
--- Usuário pode atualizar suas propriedades
-CREATE POLICY "user_update_own_propriedades"
-    ON propriedades FOR UPDATE
-    TO authenticated
-    USING (auth.uid() = proprietario_id);
-
--- Service role tem acesso total
-CREATE POLICY "service_role_all_propriedades"
-    ON propriedades FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
-
--- ───────────────────────────────────────────────────────────────
--- Policies: LOTES
--- ───────────────────────────────────────────────────────────────
-
-CREATE POLICY "user_read_own_lotes"
-    ON lotes FOR SELECT
-    TO authenticated
-    USING (
+-- Política: usuário vê apenas ciclos de seus animais
+CREATE POLICY "users_own_cycles" ON reproductive_cycles
+    FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM propriedades
-            WHERE propriedades.id = lotes.propriedade_id
-            AND propriedades.proprietario_id = auth.uid()
+            SELECT 1 FROM animals 
+            WHERE animals.id = reproductive_cycles.animal_id 
+            AND animals.user_id = auth.uid()
         )
     );
 
-CREATE POLICY "user_create_own_lotes"
-    ON lotes FOR INSERT
-    TO authenticated
-    WITH CHECK (
+-- Política: usuário vê apenas predições de seus animais
+CREATE POLICY "users_own_predictions" ON ai_predictions
+    FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM propriedades
-            WHERE propriedades.id = lotes.propriedade_id
-            AND propriedades.proprietario_id = auth.uid()
+            SELECT 1 FROM animals 
+            WHERE animals.id = ai_predictions.animal_id 
+            AND animals.user_id = auth.uid()
         )
     );
-
-CREATE POLICY "service_role_all_lotes"
-    ON lotes FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
-
--- ───────────────────────────────────────────────────────────────
--- Policies: ANIMAIS
--- ───────────────────────────────────────────────────────────────
-
-CREATE POLICY "user_read_own_animais"
-    ON animais FOR SELECT
-    TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM propriedades
-            WHERE propriedades.id = animais.propriedade_id
-            AND propriedades.proprietario_id = auth.uid()
-        )
-    );
-
-CREATE POLICY "user_create_own_animais"
-    ON animais FOR INSERT
-    TO authenticated
-    WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM propriedades
-            WHERE propriedades.id = animais.propriedade_id
-            AND propriedades.proprietario_id = auth.uid()
-        )
-    );
-
-CREATE POLICY "service_role_all_animais"
-    ON animais FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
-
--- ───────────────────────────────────────────────────────────────
--- Policies: PESAGENS
--- ───────────────────────────────────────────────────────────────
-
-CREATE POLICY "user_read_own_pesagens"
-    ON pesagens FOR SELECT
-    TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM animais
-            JOIN propriedades ON propriedades.id = animais.propriedade_id
-            WHERE animais.id = pesagens.animal_id
-            AND propriedades.proprietario_id = auth.uid()
-        )
-    );
-
-CREATE POLICY "service_role_all_pesagens"
-    ON pesagens FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
-
--- ───────────────────────────────────────────────────────────────
--- Policies: VACINAS
--- ───────────────────────────────────────────────────────────────
-
-CREATE POLICY "user_read_own_vacinas"
-    ON vacinas FOR SELECT
-    TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM animais
-            JOIN propriedades ON propriedades.id = animais.propriedade_id
-            WHERE animais.id = vacinas.animal_id
-            AND propriedades.proprietario_id = auth.uid()
-        )
-    );
-
-CREATE POLICY "service_role_all_vacinas"
-    ON vacinas FOR ALL
-    TO service_role
-    USING (true)
-    WITH CHECK (true);
-
--- ═══════════════════════════════════════════════════════════════
--- FUNÇÕES E TRIGGERS
--- ═══════════════════════════════════════════════════════════════
-
--- Função para atualizar updated_at automaticamente
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Triggers para updated_at
-CREATE TRIGGER set_updated_at_propriedades
-    BEFORE UPDATE ON propriedades
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER set_updated_at_lotes
-    BEFORE UPDATE ON lotes
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER set_updated_at_animais
-    BEFORE UPDATE ON animais
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
-
--- ═══════════════════════════════════════════════════════════════
--- VIEWS ÚTEIS
--- ═══════════════════════════════════════════════════════════════
-
--- View de animais com informações agregadas
-CREATE OR REPLACE VIEW view_animais_completo AS
-SELECT 
-    a.id,
-    a.brinco,
-    a.nome,
-    a.raca,
-    CASE a.sexo
-        WHEN 1 THEN 'Macho'
-        WHEN 2 THEN 'Fêmea'
-    END as sexo,
-    a.data_nascimento,
-    EXTRACT(YEAR FROM AGE(a.data_nascimento)) as idade_anos,
-    a.peso_atual,
-    CASE a.status
-        WHEN 1 THEN 'Ativo'
-        WHEN 2 THEN 'Vendido'
-        WHEN 3 THEN 'Morto'
-        WHEN 4 THEN 'Inativo'
-    END as status,
-    p.nome as propriedade_nome,
-    l.nome as lote_nome,
-    a.created_at
-FROM animais a
-JOIN propriedades p ON p.id = a.propriedade_id
-LEFT JOIN lotes l ON l.id = a.lote_id;
-
--- ═══════════════════════════════════════════════════════════════
--- DADOS DE EXEMPLO (OPCIONAL - Remover em produção)
--- ═══════════════════════════════════════════════════════════════
-
--- Você pode adicionar dados de exemplo aqui para testes
--- INSERT INTO propriedades (nome, cidade, estado, proprietario_id) VALUES ...
 
 COMMIT;
