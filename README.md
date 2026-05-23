@@ -1,143 +1,261 @@
-# ManadaIA - Sistema de Gestão de Rebanho Bovino
+# 🐄 ManadaIA API
 
-API REST desenvolvida com .NET 8, Clean Architecture e Supabase para gerenciamento completo do seu rebanho.
+API REST para gestão genética e reprodutiva de rebanhos (bovinos, ovinos e caprinos) com análise de Inteligência Artificial para predição de prenhez.
+
+---
+
+## 🎯 Sobre o Projeto
+
+Sistema desenvolvido para criadores do sertão cearense que permite:
+
+- 📋 Cadastro e gestão de animais (bovinos, ovinos, caprinos)
+- 🔄 Registro de ciclos reprodutivos (inseminação, parto, diagnóstico)
+- 🤖 Predições de prenhez usando IA (Gemini API)
+- 📊 Relatórios de desempenho reprodutivo
+- 🔐 Autenticação segura via Supabase Auth
+
+---
 
 ## 🏗️ Arquitetura
 
-Este projeto segue os princípios de **Clean Architecture** (Arquitetura Limpa), organizado em 4 camadas:
+### Clean Architecture com Service + Repository Pattern
 
 ```
-src/
-├── ManadaIA.Domain/              # Camada de Domínio (sem dependências externas)
-│   ├── Entities/                 # Entidades: Animal, Propriedade, Lote, Pesagem, Vacina
-│   ├── Interfaces/               # Contratos de repositório
-│   └── Exceptions/               # Exceções de domínio
-│
-├── ManadaIA.Application/         # Casos de Uso, DTOs, Validações
-│   ├── Features/Animais/
-│   │   ├── Commands/             # CreateAnimalCommand, etc.
-│   │   └── Queries/              # GetAnimalByIdQuery, etc.
-│   ├── DTOs/                     # Data Transfer Objects
-│   ├── Validators/               # FluentValidation
-│   └── Behaviors/                # Pipeline Behaviors (Validation)
-│
-├── ManadaIA.Infrastructure/      # Supabase, Repositórios, Serviços Externos
-│   ├── Supabase/                 # Client Factory, Settings
-│   ├── Models/                   # Models do Postgrest
-│   └── Repositories/             # Implementações dos repositórios
-│
-└── ManadaIA.API/                 # ASP.NET Web API
-    ├── Controllers/              # AnimaisController, etc.
-    ├── Middleware/               # ExceptionMiddleware
-    └── Program.cs                # Configuração da aplicação
+┌─────────────────────────────────────────┐
+│     API (Controllers + Middleware)      │
+├─────────────────────────────────────────┤
+│  Application (Services + DTOs)          │
+├─────────────────────────────────────────┤
+│  Domain (Entities + Interfaces)         │
+├─────────────────────────────────────────┤
+│  Infrastructure (Repositories + DB)     │
+└─────────────────────────────────────────┘
 ```
 
-## 🚀 Tecnologias
+---
+
+## 🚀 Stack Tecnológico
 
 - **.NET 8** - Framework principal
-- **Supabase** - Backend-as-a-Service (PostgreSQL + Auth + Storage)
-- **MediatR** - CQRS e Mediator Pattern
-- **FluentValidation** - Validação de comandos/queries
+- **Supabase** - Autenticação JWT + PostgreSQL
 - **Serilog** - Logging estruturado
-- **JWT Bearer** - Autenticação
 - **Swagger/OpenAPI** - Documentação da API
 
-## 📦 Pacotes NuGet
+---
 
-### ManadaIA.Application
-- `MediatR` - Padrão Mediator e CQRS
-- `FluentValidation` - Validação de entrada
-- `FluentValidation.DependencyInjectionExtensions` - DI
+## 📦 Estrutura do Projeto
 
-### ManadaIA.Infrastructure
-- `supabase-csharp` - Cliente oficial do Supabase
-- `Postgrest` - ORM para PostgreSQL
+```
+ManadaIA.API/
+├── src/
+│   ├── ManadaIA.API/              # Camada de apresentação
+│   │   ├── Controllers/           # Endpoints REST
+│   │   ├── Middleware/            # Exception handling
+│   │   └── Extensions/            # Configurações
+│   │
+│   ├── ManadaIA.Application/      # Lógica de negócio
+│   │   ├── Services/              # Services principais
+│   │   └── DTOs/                  # Data Transfer Objects
+│   │
+│   ├── ManadaIA.Domain/           # Domínio central
+│   │   ├── Entities/              # Entidades de negócio
+│   │   ├── Interfaces/            # Contratos dos repositórios
+│   │   └── Exceptions/            # Exceções customizadas
+│   │
+│   └── ManadaIA.Infrastructure/   # Infraestrutura
+│       ├── Repositories/          # Implementações Supabase
+│       ├── Models/                # Models de persistência
+│       └── Supabase/              # Configuração Supabase
+│
+├── database/
+│   └── schema.sql                 # Script de criação do banco
+│
+├── api-examples.http              # Exemplos de requisições
+```
 
-### ManadaIA.API
-- `Serilog.AspNetCore` - Logging
-- `Microsoft.AspNetCore.Authentication.JwtBearer` - Autenticação JWT
+---
 
-## 🗄️ Banco de Dados
+## 🗄️ Modelo de Dados
 
-O esquema do banco está em `database/schema.sql`. Execute no SQL Editor do Supabase.
+### Principais Entidades
 
-### Tabelas Principais
-- `propriedades` - Fazendas/propriedades rurais
-- `lotes` - Agrupamento de animais
-- `animais` - Rebanho bovino
-- `pesagens` - Histórico de peso dos animais
-- `vacinas` - Registro de vacinação
+#### 1. **Animal**
+- Informações básicas: código, nome, espécie, sexo, raça
+- Linhagem, data de nascimento, peso
+- Suporta: bovinos, ovinos, caprinos
 
-### Row Level Security (RLS)
-Todas as tabelas possuem RLS habilitado:
-- Usuários autenticados veem apenas dados de suas propriedades
-- `service_role` (backend) tem acesso total
+#### 2. **ReproductiveCycle**
+- Histórico reprodutivo completo
+- Eventos: inseminação, parto, diagnóstico
+- Técnicas: IATF, IA convencional, monta natural
+- Resultados: prenha, vazia, aguardando
+
+#### 3. **AIPrediction**
+- Predições de prenhez geradas por IA
+- Taxa de sucesso (0-100%)
+- Nível de confiança (alta, média, baixa)
+- Fatores de risco e recomendações
+
+---
+
+## 🔌 Endpoints da API
+
+### 🐄 Animals
+```http
+GET    /api/v1/animals                  # Lista todos os animais
+GET    /api/v1/animals/{id}             # Detalhe do animal
+GET    /api/v1/animals/species/{sp}     # Filtra por espécie
+POST   /api/v1/animals                  # Cadastra animal
+PUT    /api/v1/animals/{id}             # Atualiza animal
+DELETE /api/v1/animals/{id}             # Remove animal
+```
+
+### 🔄 Reproductive Cycles
+```http
+GET    /api/v1/cycles/animals/{id}      # Histórico do animal
+POST   /api/v1/cycles                   # Registra evento
+PUT    /api/v1/cycles/{id}              # Atualiza resultado
+```
+
+### 🤖 AI Predictions
+```http
+POST   /api/v1/ai/predict               # Gera predição
+GET    /api/v1/ai/predictions/{id}      # Detalhe da predição
+GET    /api/v1/ai/predictions/animal/{id} # Histórico
+```
+
+### 📊 Reports
+```http
+GET    /api/v1/reports/summary          # Resumo geral
+GET    /api/v1/reports/pregnancy-rate   # Taxa de prenhez
+```
+
+---
 
 ## ⚙️ Configuração
 
-### 1. Supabase
+### 1. Pré-requisitos
 
-Crie um projeto em [supabase.com](https://supabase.com) e execute o script `database/schema.sql`.
+- .NET 8 SDK
+- Conta no Supabase (gratuita)
+- Visual Studio 2022 ou VS Code
 
-### 2. appsettings.json
+### 2. Configurar Supabase
 
-Atualize as credenciais do Supabase em `src/ManadaIA.API/appsettings.json`:
+1. Crie um projeto em [supabase.com](https://supabase.com)
+2. Execute o script `database/schema.sql` no SQL Editor
+3. Copie as credenciais do projeto
+
+### 3. Configurar appsettings.json
 
 ```json
 {
   "Supabase": {
     "Url": "https://seu-projeto.supabase.co",
-    "AnonKey": "sua-anon-key",
-    "ServiceRoleKey": "sua-service-role-key",
-    "JwtSecret": "seu-jwt-secret"
+    "Key": "sua-anon-key",
+    "Secret": "sua-service-role-key"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information"
+    }
   }
 }
 ```
 
-### 3. Executar
+### 4. Executar o Projeto
 
 ```bash
+# Restaurar dependências
+dotnet restore
+
+# Compilar
+dotnet build
+
+# Executar
 cd src/ManadaIA.API
 dotnet run
 ```
 
-A API estará disponível em `https://localhost:7xxx` com Swagger na raiz.
+### 5. Acessar a API
+
+- **Swagger UI**: https://localhost:5001/swagger
+- **Health Check**: https://localhost:5001/health
+
+---
+
+## 🧪 Testando a API
+
+Use o arquivo `api-examples.http` com a extensão REST Client do VS Code:
+
+```http
+### Criar um animal
+POST https://localhost:5001/api/v1/animals
+Authorization: Bearer SEU_TOKEN
+Content-Type: application/json
+
+{
+  "code": "BOV-001",
+  "name": "Mimosa",
+  "species": "bovino",
+  "sex": "femea",
+  "breed": "Nelore",
+  "birthDate": "2022-03-15",
+  "weightKg": 450.5
+}
+```
+
+---
 
 ## 🔐 Autenticação
 
-Todos os endpoints (exceto autenticação) requerem JWT Bearer token do Supabase.
+Todas as rotas requerem autenticação JWT via Supabase:
 
 ```http
-Authorization: Bearer <token-do-supabase>
+Authorization: Bearer <seu_token_jwt>
 ```
 
-## 📋 Endpoints Principais
+O token é obtido através do login no Supabase Auth.
 
-### Animais
+---
 
-- `GET /api/animais/propriedade/{id}` - Lista animais de uma propriedade
-- `GET /api/animais/{id}` - Obtém um animal por ID
-- `POST /api/animais` - Cadastra novo animal
-- `DELETE /api/animais/{id}` - Remove animal
+## 📝 Licença
 
-## 🏛️ Princípios Aplicados
+**GNU GPL v3.0** - Código-fonte aberto conforme edital do projeto.
 
-- **Clean Architecture** - Separação de responsabilidades em camadas
-- **CQRS** - Commands e Queries separados
-- **DDD** - Entidades ricas com lógica de negócio
-- **SOLID** - Princípios de design orientado a objetos
-- **Repository Pattern** - Abstração de acesso a dados
-- **Dependency Injection** - Inversão de controle
+---
 
-## 📝 Próximos Passos
+## 👥 Contribuindo
 
-- [ ] Implementar comandos de Update e Delete
-- [ ] Adicionar controllers para Propriedades, Lotes, Pesagens e Vacinas
-- [ ] Implementar paginação
-- [ ] Adicionar filtros avançados
-- [ ] Testes unitários e de integração
-- [ ] Docker e CI/CD
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona MinhaFeature'`)
+4. Push para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um Pull Request
 
-## 📄 Licença
+---
 
-Este projeto é de uso interno.
+## 📚 Documentação Adicional
+
+- [api-examples.http](api-examples.http) - Exemplos completos de requisições
+- [database/schema.sql](database/schema.sql) - Schema completo do banco
+
+---
+
+## 🐛 Reportar Bugs
+
+Abra uma issue no GitHub com:
+- Descrição do problema
+- Passos para reproduzir
+- Comportamento esperado vs. atual
+- Screenshots (se aplicável)
+
+---
+
+## 📧 Contato
+
+Para dúvidas ou sugestões sobre o projeto, abra uma issue ou discussion no GitHub.
+
+---
+
+**Desenvolvido para produtores rurais do sertão cearense 🌵**

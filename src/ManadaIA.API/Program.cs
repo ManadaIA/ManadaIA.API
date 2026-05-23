@@ -23,7 +23,7 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 // Serviços de cada camada
 // ══════════════════════════════════════════
 builder.Services
-    .AddApplicationServices()                               // MediatR, FluentValidation, Behaviors
+    .AddApplicationServices()
     .AddInfrastructureServices(builder.Configuration)       // Supabase, Repos, Services
     .AddSupabaseAuth(builder.Configuration);                // JWT Bearer Authentication
 

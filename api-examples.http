@@ -1,0 +1,177 @@
+### ManadaIA API - Exemplos de Requisições HTTP
+### Executar no REST Client do VS Code
+
+@baseUrl = https://localhost:5001/api/v1
+@token = Bearer SEU_TOKEN_JWT_AQUI
+
+### ═══════════════════════════════════════════
+### ANIMALS ENDPOINTS
+### ═══════════════════════════════════════════
+
+### 1. Listar todos os animais do usuário
+GET {{baseUrl}}/animals
+Authorization: {{token}}
+
+### 2. Obter animal por ID
+GET {{baseUrl}}/animals/00000000-0000-0000-0000-000000000000
+Authorization: {{token}}
+
+### 3. Filtrar animais por espécie
+GET {{baseUrl}}/animals/species/bovino
+Authorization: {{token}}
+
+### 4. Criar novo animal
+POST {{baseUrl}}/animals
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "code": "BOV-001",
+  "name": "Mimosa",
+  "species": "bovino",
+  "sex": "femea",
+  "breed": "Nelore",
+  "lineage": "Linhagem A",
+  "birthDate": "2022-03-15",
+  "weightKg": 450.5,
+  "notes": "Animal saudável, primeira cria"
+}
+
+### 5. Atualizar animal
+PUT {{baseUrl}}/animals/00000000-0000-0000-0000-000000000000
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "name": "Mimosa da Silva",
+  "weightKg": 480.0,
+  "notes": "Atualização de peso"
+}
+
+### 6. Deletar animal
+DELETE {{baseUrl}}/animals/00000000-0000-0000-0000-000000000000
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════
+### REPRODUCTIVE CYCLES ENDPOINTS
+### ═══════════════════════════════════════════
+
+### 7. Listar ciclos de um animal
+GET {{baseUrl}}/cycles/animals/00000000-0000-0000-0000-000000000000
+Authorization: {{token}}
+
+### 8. Registrar nova inseminação
+POST {{baseUrl}}/cycles
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "animalId": "00000000-0000-0000-0000-000000000000",
+  "eventDate": "2024-01-15",
+  "eventType": "inseminacao",
+  "sireName": "Touro Campeão",
+  "semenBatch": "BATCH-2024-001",
+  "technique": "iatf",
+  "technician": "Dr. João Silva",
+  "result": "aguardando",
+  "notes": "Primeira IA da temporada"
+}
+
+### 9. Atualizar resultado do ciclo (diagnóstico)
+PUT {{baseUrl}}/cycles/00000000-0000-0000-0000-000000000000
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "result": "prenha",
+  "notes": "Diagnóstico positivo aos 30 dias"
+}
+
+### ═══════════════════════════════════════════
+### AI PREDICTIONS ENDPOINTS
+### ═══════════════════════════════════════════
+
+### 10. Gerar predição de prenhez
+POST {{baseUrl}}/ai/predict
+Authorization: {{token}}
+Content-Type: application/json
+
+{
+  "animalId": "00000000-0000-0000-0000-000000000000",
+  "cycleId": "00000000-0000-0000-0000-000000000000",
+  "pregnancyRate": 78.5,
+  "confidenceLevel": "alta",
+  "explanation": "Com base no histórico reprodutivo e condições atuais, a probabilidade de prenhez é alta.",
+  "riskFactors": "[\"idade avançada\", \"escore corporal baixo\"]",
+  "recommendations": "[\"suplementação nutricional\", \"acompanhamento veterinário\"]",
+  "aiModelUsed": "gemini-1.5-flash",
+  "rawPrompt": "Análise completa do animal...",
+  "rawResponse": "Resposta da IA..."
+}
+
+### 11. Obter predição por ID
+GET {{baseUrl}}/ai/predictions/00000000-0000-0000-0000-000000000000
+Authorization: {{token}}
+
+### 12. Histórico de predições de um animal
+GET {{baseUrl}}/ai/predictions/animal/00000000-0000-0000-0000-000000000000
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════
+### REPORTS ENDPOINTS
+### ═══════════════════════════════════════════
+
+### 13. Resumo geral do rebanho
+GET {{baseUrl}}/reports/summary
+Authorization: {{token}}
+
+### 14. Taxa de prenhez por espécie
+GET {{baseUrl}}/reports/pregnancy-rate
+Authorization: {{token}}
+
+### ═══════════════════════════════════════════
+### EXEMPLOS DE RESPOSTA
+### ═══════════════════════════════════════════
+
+### Resposta esperada - Lista de animais:
+# {
+#   "id": "uuid",
+#   "userId": "uuid",
+#   "code": "BOV-001",
+#   "name": "Mimosa",
+#   "species": "bovino",
+#   "sex": "femea",
+#   "breed": "Nelore",
+#   "lineage": "Linhagem A",
+#   "birthDate": "2022-03-15",
+#   "weightKg": 450.5,
+#   "notes": "Animal saudável",
+#   "createdAt": "2024-01-01T00:00:00Z",
+#   "updatedAt": null
+# }
+
+### Resposta esperada - Resumo:
+# {
+#   "totalAnimals": 150,
+#   "totalBovinos": 100,
+#   "totalOvinos": 30,
+#   "totalCaprinos": 20,
+#   "totalFemales": 120,
+#   "totalMales": 30
+# }
+
+### Resposta esperada - Taxa de prenhez:
+# [
+#   {
+#     "species": "bovino",
+#     "totalInseminations": 80,
+#     "totalPregnant": 65,
+#     "pregnancyRate": 81.25
+#   },
+#   {
+#     "species": "ovino",
+#     "totalInseminations": 25,
+#     "totalPregnant": 20,
+#     "pregnancyRate": 80.00
+#   }
+# ]
