@@ -1,11 +1,13 @@
 ﻿using ManadaIA.Application.DTOs;
 using ManadaIA.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ManadaIA.API.Controllers;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/users")]
+[AllowAnonymous]
 public sealed class UserController(IUserService userService) : ControllerBase
 {
     /// <summary>
