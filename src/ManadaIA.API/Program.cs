@@ -1,4 +1,5 @@
 using ManadaIA.API.Extensions;
+using ManadaIA.API.Filters;
 using ManadaIA.API.Middleware;
 using ManadaIA.Application.Extensions;
 using ManadaIA.Infrastructure;
@@ -83,20 +84,7 @@ builder.Services.AddSwaggerGen(options =>
         BearerFormat = "JWT"
     });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+    options.OperationFilter<AllowAnonymousOperationFilter>();
 });
 
 // ══════════════════════════════════════════
