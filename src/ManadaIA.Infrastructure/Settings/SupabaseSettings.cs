@@ -1,4 +1,4 @@
-namespace ManadaIA.Infrastructure.Supabase;
+namespace ManadaIA.Infrastructure.Settings;
 
 public sealed class SupabaseSettings
 {

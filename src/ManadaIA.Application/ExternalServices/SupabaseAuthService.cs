@@ -34,6 +34,8 @@ namespace ManadaIA.Application.ExternalServices
 
         public async Task<LoginDto> AuthenticateAsync(UserLoginRequest request, CancellationToken ct = default)
         {
+            if (request is null) throw new ArgumentNullException(nameof(request));
+
             if (string.IsNullOrWhiteSpace(_supabaseSettings.Url) || string.IsNullOrWhiteSpace(_supabaseSettings.AnonKey))
             {
                 _logger.LogError("Supabase configuration is missing or empty");

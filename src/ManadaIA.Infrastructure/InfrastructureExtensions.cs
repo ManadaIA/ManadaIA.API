@@ -1,5 +1,6 @@
 using ManadaIA.Domain.Interfaces;
 using ManadaIA.Infrastructure.Repositories;
+using ManadaIA.Infrastructure.Settings;
 using ManadaIA.Infrastructure.Supabase;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -9,9 +10,7 @@ namespace ManadaIA.Infrastructure;
 
 public static class InfrastructureExtensions
 {
-    public static IServiceCollection AddInfrastructureServices(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Supabase Settings
         var supabaseSettings = configuration
@@ -26,8 +25,7 @@ public static class InfrastructureExtensions
         {
             var settings = sp.GetRequiredService<SupabaseSettings>();
 
-            var httpContextAccessor =
-                sp.GetRequiredService<IHttpContextAccessor>();
+            var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
 
             var httpContext = httpContextAccessor.HttpContext
                 ?? throw new InvalidOperationException("HttpContext não encontrado");
