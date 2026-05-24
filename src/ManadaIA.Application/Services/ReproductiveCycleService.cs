@@ -70,9 +70,9 @@ public sealed class ReproductiveCycleService(
             request.Notes
         );
 
-        await cycleRepository.AddAsync(cycle, ct);
+        cycle = await cycleRepository.AddAsync(cycle, ct);
 
-        return MapToDto(cycle);
+        return MapToDto(cycle!);
     }
 
     public async Task<ReproductiveCycleDto> UpdateResultAsync(Guid id, UpdateReproductiveCycleRequest request, CancellationToken ct = default)

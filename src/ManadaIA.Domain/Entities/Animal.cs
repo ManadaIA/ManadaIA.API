@@ -2,7 +2,6 @@ namespace ManadaIA.Domain.Entities;
 
 /// <summary>
 /// Representa um animal do rebanho
-/// Alinhado com a tabela 'animals' da documentação técnica
 /// </summary>
 public sealed class Animal
 {
@@ -42,7 +41,6 @@ public sealed class Animal
 
         return new Animal
         {
-            Id = Guid.NewGuid(),
             UserId = userId,
             Code = code,
             Name = name,
@@ -75,14 +73,7 @@ public sealed class Animal
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateWeight(decimal newWeight)
-    {
-        if (newWeight <= 0)
-            throw new ArgumentException("Peso deve ser maior que zero", nameof(newWeight));
-
-        WeightKg = newWeight;
-        UpdatedAt = DateTime.UtcNow;
-    }
+    public void SetId(Guid id) => Id = id;
 }
 
 public enum Species

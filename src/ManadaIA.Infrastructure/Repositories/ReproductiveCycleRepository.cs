@@ -2,6 +2,7 @@ using ManadaIA.Domain.Entities;
 using ManadaIA.Domain.Interfaces;
 using ManadaIA.Infrastructure.Models;
 using Supabase;
+using System.Data.SqlTypes;
 
 namespace ManadaIA.Infrastructure.Repositories;
 
@@ -48,10 +49,21 @@ public sealed class ReproductiveCycleRepository(Client supabase) : IReproductive
         return result.Models.Select(m => m.ToDomain()).ToList();
     }
 
-    public async Task AddAsync(ReproductiveCycle entity, CancellationToken ct = default)
+    public async Task<ReproductiveCycle> AddAsync(ReproductiveCycle entity, CancellationToken ct = default)
     {
         var model = ReproductiveCycleModel.FromDomain(entity);
-        await supabase.From<ReproductiveCycleModel>().Insert(model);
+
+        var response = await supabase
+            .From<ReproductiveCycleModel>()
+            .Insert(model, new Postgrest.QueryOptions
+            {
+                Returning = Postgrest.QueryOptions.ReturnType.Representation
+            });
+
+        var inserted = response.Models.FirstOrDefault() ?? throw new SqlNullValueException();
+
+        entity.SetId(inserted.Id);
+        return entity;
     }
 
     public async Task UpdateAsync(ReproductiveCycle entity, CancellationToken ct = default)

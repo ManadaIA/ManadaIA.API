@@ -59,9 +59,9 @@ public sealed class AIPredictionService(
             request.RawResponse
         );
 
-        await predictionRepository.AddAsync(prediction, ct);
+        prediction = await predictionRepository.AddAsync(prediction, ct);
 
-        return MapToDto(prediction);
+        return MapToDto(prediction!);
     }
 
     private static AIPredictionDto MapToDto(AIPrediction prediction) => new(

@@ -2,6 +2,7 @@ using ManadaIA.Domain.Entities;
 using ManadaIA.Domain.Interfaces;
 using ManadaIA.Infrastructure.Models;
 using Supabase;
+using System.Data.SqlTypes;
 
 namespace ManadaIA.Infrastructure.Repositories;
 
@@ -58,10 +59,21 @@ public sealed class AnimalRepository(Client supabase) : IAnimalRepository
         return result.Models.Select(m => m.ToDomain()).ToList();
     }
 
-    public async Task AddAsync(Animal entity, CancellationToken ct = default)
+    public async Task<Animal> AddAsync(Animal entity, CancellationToken ct = default)
     {
         var model = AnimalModel.FromDomain(entity);
-        await supabase.From<AnimalModel>().Insert(model);
+
+        var response = await supabase
+            .From<AnimalModel>()
+            .Insert(model, new Postgrest.QueryOptions
+            {
+                Returning = Postgrest.QueryOptions.ReturnType.Representation
+            });
+
+        var inserted = response.Models.FirstOrDefault() ?? throw new SqlNullValueException();
+
+        entity.SetId(inserted.Id);
+        return entity;
     }
 
     public async Task UpdateAsync(Animal entity, CancellationToken ct = default)

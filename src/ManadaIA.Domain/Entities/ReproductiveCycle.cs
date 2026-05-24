@@ -17,7 +17,6 @@ public sealed class ReproductiveCycle
     public string? Notes { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    // EF/ORM private constructor
     private ReproductiveCycle() { }
 
     public static ReproductiveCycle Create(
@@ -36,7 +35,6 @@ public sealed class ReproductiveCycle
 
         return new ReproductiveCycle
         {
-            Id = Guid.NewGuid(),
             AnimalId = animalId,
             EventDate = eventDate,
             EventType = eventType,
@@ -56,6 +54,8 @@ public sealed class ReproductiveCycle
         if (notes is not null)
             Notes = notes;
     }
+
+    public void SetId(Guid id) => Id = id;
 }
 
 public enum EventType

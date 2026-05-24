@@ -67,9 +67,9 @@ public sealed class AnimalService(IAnimalRepository animalRepository) : IAnimalS
             request.Notes
         );
 
-        await animalRepository.AddAsync(animal, ct);
+        animal = await animalRepository.AddAsync(animal, ct);
 
-        return MapToDto(animal);
+        return MapToDto(animal!);
     }
 
     public async Task<AnimalDto> UpdateAsync(Guid id, UpdateAnimalRequest request, CancellationToken ct = default)

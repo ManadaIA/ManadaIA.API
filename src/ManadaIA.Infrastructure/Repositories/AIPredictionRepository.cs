@@ -2,6 +2,7 @@ using ManadaIA.Domain.Entities;
 using ManadaIA.Domain.Interfaces;
 using ManadaIA.Infrastructure.Models;
 using Supabase;
+using System.Data.SqlTypes;
 
 namespace ManadaIA.Infrastructure.Repositories;
 
@@ -49,10 +50,21 @@ public sealed class AIPredictionRepository(Client supabase) : IAIPredictionRepos
         return result?.ToDomain();
     }
 
-    public async Task AddAsync(AIPrediction entity, CancellationToken ct = default)
+    public async Task<AIPrediction> AddAsync(AIPrediction entity, CancellationToken ct = default)
     {
         var model = AIPredictionModel.FromDomain(entity);
-        await supabase.From<AIPredictionModel>().Insert(model);
+
+        var response = await supabase
+            .From<AIPredictionModel>()
+            .Insert(model, new Postgrest.QueryOptions
+            {
+                Returning = Postgrest.QueryOptions.ReturnType.Representation
+            });
+
+        var inserted = response.Models.FirstOrDefault() ?? throw new SqlNullValueException();
+
+        entity.SetId(inserted.Id);
+        return entity;
     }
 
     public async Task UpdateAsync(AIPrediction entity, CancellationToken ct = default)

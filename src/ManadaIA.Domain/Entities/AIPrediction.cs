@@ -38,7 +38,6 @@ public sealed class AIPrediction
 
         return new AIPrediction
         {
-            Id = Guid.NewGuid(),
             AnimalId = animalId,
             CycleId = cycleId,
             PredictionDate = DateTime.UtcNow,
@@ -52,6 +51,8 @@ public sealed class AIPrediction
             RawResponse = rawResponse
         };
     }
+
+    public void SetId(Guid id) => Id = id;
 }
 
 public enum ConfidenceLevel
