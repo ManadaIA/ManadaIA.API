@@ -1,4 +1,4 @@
-using ManadaIA.Infrastructure.Supabase;
+using ManadaIA.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 

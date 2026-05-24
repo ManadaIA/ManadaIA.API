@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ManadaIA.Application.DTOs;
 
 // ═══════════════════════════════════════════
@@ -124,4 +126,44 @@ public sealed record PregnancyRateReportDto(
     int TotalInseminations,
     int TotalPregnant,
     decimal PregnancyRate
+);
+
+// ═══════════════════════════════════════════
+// USERS DTOs
+// ═══════════════════════════════════════════
+
+public sealed record UserLoginRequest(
+    string Email,
+    string Password
+);
+
+public sealed record UserLoginDto(
+    [property: JsonPropertyName("id")]
+    Guid Id,
+
+    [property: JsonPropertyName("email")]
+    string Email,
+
+    [property: JsonPropertyName("phone")]
+    string Phone,
+
+    [property: JsonPropertyName("email_confirmed_at")]
+    DateTime? EmailConfirmedAt,
+
+    [property: JsonPropertyName("confirmed_at")]
+    DateTime? ConfirmedAt
+);
+
+public sealed record LoginDto(
+    [property: JsonPropertyName("access_token")]
+    string AccessToken,
+
+    [property: JsonPropertyName("token_type")]
+    string TokenType,
+
+    [property: JsonPropertyName("expires_in")]
+    long ExpiresIn,
+
+    [property: JsonPropertyName("user")]
+    UserLoginDto? User
 );

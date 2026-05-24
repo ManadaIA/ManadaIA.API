@@ -1,7 +1,7 @@
 using ManadaIA.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ManadaIA.Application;
+namespace ManadaIA.Application.Extensions;
 
 public static class ApplicationExtensions
 {
@@ -12,6 +12,7 @@ public static class ApplicationExtensions
         services.AddScoped<IReproductiveCycleService, ReproductiveCycleService>();
         services.AddScoped<IAIPredictionService, AIPredictionService>();
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IUserService, UserService>();
 
         return services;
     }

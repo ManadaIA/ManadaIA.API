@@ -1,5 +1,8 @@
+using ManadaIA.Application.ExternalServices;
+using ManadaIA.Application.ExternalServices.Interfaces;
 using ManadaIA.Domain.Interfaces;
 using ManadaIA.Infrastructure.Repositories;
+using ManadaIA.Infrastructure.Settings;
 using ManadaIA.Infrastructure.Supabase;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -9,9 +12,7 @@ namespace ManadaIA.Infrastructure;
 
 public static class InfrastructureExtensions
 {
-    public static IServiceCollection AddInfrastructureServices(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Supabase Settings
         var supabaseSettings = configuration
@@ -20,14 +21,22 @@ public static class InfrastructureExtensions
 
         services.AddSingleton(supabaseSettings);
 
+        // HttpClient for Supabase
+        services.AddHttpClient("Supabase", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(supabaseSettings.Timeout);
+        });
+        // ToDo: Configurar Polly para retry
+
+        services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
+
         // Supabase Client        
         services.AddHttpContextAccessor();
         services.AddScoped(sp =>
         {
             var settings = sp.GetRequiredService<SupabaseSettings>();
 
-            var httpContextAccessor =
-                sp.GetRequiredService<IHttpContextAccessor>();
+            var httpContextAccessor = sp.GetRequiredService<IHttpContextAccessor>();
 
             var httpContext = httpContextAccessor.HttpContext
                 ?? throw new InvalidOperationException("HttpContext não encontrado");

@@ -1,4 +1,5 @@
 using Supabase;
+using ManadaIA.Infrastructure.Settings;
 
 namespace ManadaIA.Infrastructure.Supabase;
 
