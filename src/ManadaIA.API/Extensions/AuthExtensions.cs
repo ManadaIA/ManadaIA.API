@@ -6,9 +6,7 @@ namespace ManadaIA.API.Extensions;
 
 public static class AuthExtensions
 {
-    public static IServiceCollection AddSupabaseAuth(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddSupabaseAuth(this IServiceCollection services, IConfiguration configuration)
     {
         SupabaseSettings supabaseSettings = configuration
             .GetSection(SupabaseSettings.SectionName)

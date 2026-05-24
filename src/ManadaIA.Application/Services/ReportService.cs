@@ -53,7 +53,7 @@ public sealed class ReportService(
             var rate = inseminations > 0 ? (decimal)pregnant / inseminations * 100 : 0;
 
             reports.Add(new PregnancyRateReportDto(
-                Species: species.ToString().ToLower(),
+                Species: species.ToString().ToUpper(),
                 TotalInseminations: inseminations,
                 TotalPregnant: pregnant,
                 PregnancyRate: Math.Round(rate, 2)

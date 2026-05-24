@@ -9,7 +9,11 @@ public static class SupabaseClientFactory
         var options = new SupabaseOptions
         {
             AutoConnectRealtime = false,
-            AutoRefreshToken = false
+            AutoRefreshToken = false,
+            Headers = new Dictionary<string, string>
+            {
+                { "Authorization", $"Bearer {accessToken}" }
+            }
         };
 
         var client = new Client(
@@ -19,8 +23,6 @@ public static class SupabaseClientFactory
         );
 
         await client.InitializeAsync();
-
-        await client.Auth.SetSession(accessToken, string.Empty);
 
         return client;
     }

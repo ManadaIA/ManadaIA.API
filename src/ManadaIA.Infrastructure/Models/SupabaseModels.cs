@@ -51,7 +51,6 @@ public sealed class AnimalModel : BaseModel
         var species = Enum.Parse<Species>(Species, true);
         var sex = Enum.Parse<Sex>(Sex, true);
 
-        // Usar reflection para criar instância (já que o construtor é privado)
         var animal = (Animal)Activator.CreateInstance(typeof(Animal), true)!;
 
         typeof(Animal).GetProperty("Id")!.SetValue(animal, Id);
@@ -77,8 +76,8 @@ public sealed class AnimalModel : BaseModel
         UserId = animal.UserId,
         Code = animal.Code,
         Name = animal.Name,
-        Species = animal.Species.ToString().ToLower(),
-        Sex = animal.Sex.ToString().ToLower(),
+        Species = animal.Species.ToString().ToUpper(),
+        Sex = animal.Sex.ToString().ToUpper(),
         Breed = animal.Breed,
         Lineage = animal.Lineage,
         BirthDate = animal.BirthDate,
@@ -153,12 +152,12 @@ public sealed class ReproductiveCycleModel : BaseModel
         Id = cycle.Id,
         AnimalId = cycle.AnimalId,
         EventDate = cycle.EventDate,
-        EventType = cycle.EventType.ToString().ToLower(),
+        EventType = cycle.EventType.ToString().ToUpper(),
         SireName = cycle.SireName,
         SemenBatch = cycle.SemenBatch,
-        Technique = cycle.Technique?.ToString().ToLower(),
+        Technique = cycle.Technique?.ToString().ToUpper(),
         Technician = cycle.Technician,
-        Result = cycle.Result?.ToString().ToLower(),
+        Result = cycle.Result?.ToString().ToUpper(),
         Notes = cycle.Notes,
         CreatedAt = cycle.CreatedAt
     };
@@ -234,7 +233,7 @@ public sealed class AIPredictionModel : BaseModel
         CycleId = prediction.CycleId,
         PredictionDate = prediction.PredictionDate,
         PregnancyRate = prediction.PregnancyRate,
-        ConfidenceLevel = prediction.ConfidenceLevel?.ToString().ToLower(),
+        ConfidenceLevel = prediction.ConfidenceLevel?.ToString().ToUpper(),
         Explanation = prediction.Explanation,
         RiskFactors = prediction.RiskFactors,
         Recommendations = prediction.Recommendations,

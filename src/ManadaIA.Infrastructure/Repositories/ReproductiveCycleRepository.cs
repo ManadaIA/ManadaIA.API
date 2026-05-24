@@ -39,7 +39,7 @@ public sealed class ReproductiveCycleRepository(Client supabase) : IReproductive
 
     public async Task<IReadOnlyList<ReproductiveCycle>> GetByEventTypeAsync(EventType eventType, CancellationToken ct = default)
     {
-        var eventTypeStr = eventType.ToString().ToLower();
+        var eventTypeStr = eventType.ToString().ToUpper();
         var result = await supabase
             .From<ReproductiveCycleModel>()
             .Where(x => x.EventType == eventTypeStr)

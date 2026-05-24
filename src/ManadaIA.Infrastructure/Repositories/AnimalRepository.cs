@@ -48,7 +48,7 @@ public sealed class AnimalRepository(Client supabase) : IAnimalRepository
 
     public async Task<IReadOnlyList<Animal>> GetBySpeciesAsync(Guid userId, Species species, CancellationToken ct = default)
     {
-        var speciesStr = species.ToString().ToLower();
+        var speciesStr = species.ToString().ToUpper();
         var result = await supabase
             .From<AnimalModel>()
             .Where(x => x.UserId == userId)

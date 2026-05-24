@@ -8,7 +8,7 @@ public sealed class Animal
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
-    public string Code { get; private set; } = string.Empty; // Código do animal
+    public string Code { get; private set; } = string.Empty;
     public string? Name { get; private set; }
     public Species Species { get; private set; }
     public Sex Sex { get; private set; }
@@ -20,7 +20,6 @@ public sealed class Animal
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-    // EF/ORM private constructor
     private Animal() { }
 
     public static Animal Create(
