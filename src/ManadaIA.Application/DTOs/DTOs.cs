@@ -125,3 +125,28 @@ public sealed record PregnancyRateReportDto(
     int TotalPregnant,
     decimal PregnancyRate
 );
+
+// ═══════════════════════════════════════════
+// USERS DTOs
+// ═══════════════════════════════════════════
+
+public sealed record UserLoginRequest(
+    string User,
+    string Password
+);
+
+public sealed record UserLoginDto(
+    Guid Id,
+    string Email,
+    string Phone,
+    DateTime? EmailConfirmedAt,
+    DateTime? ConfirmedAt
+);
+
+public sealed record LoginDto(
+    string AccessToken,
+    string TokenType,
+    string ExpiresIn,
+    string ExpiresAt,
+    UserLoginDto User
+);

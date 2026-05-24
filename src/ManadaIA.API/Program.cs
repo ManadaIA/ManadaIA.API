@@ -1,6 +1,6 @@
 using ManadaIA.API.Extensions;
 using ManadaIA.API.Middleware;
-using ManadaIA.Application;
+using ManadaIA.Application.Extensions;
 using ManadaIA.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
@@ -24,8 +24,9 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 // ══════════════════════════════════════════
 builder.Services
     .AddApplicationServices()
-    .AddInfrastructureServices(builder.Configuration)       // Supabase, Repos, Services
-    .AddSupabaseAuth(builder.Configuration);                // JWT Bearer Authentication
+    .AddApplicationExternalServices()
+    .AddInfrastructureServices(builder.Configuration)
+    .AddSupabaseAuth(builder.Configuration);
 
 // ══════════════════════════════════════════
 // Controllers & API Explorer
