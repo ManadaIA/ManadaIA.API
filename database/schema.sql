@@ -11,7 +11,7 @@
 CREATE TABLE animals (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID NOT NULL REFERENCES auth.users(id),
-    code        VARCHAR(50) NOT NULL UNIQUE,
+    code        VARCHAR(50) NOT NULL,
     name        VARCHAR(100),
     species     VARCHAR(20) NOT NULL CHECK (species IN ('BOVINO','OVINO','CAPRINO')),
     sex         VARCHAR(10) NOT NULL CHECK (sex IN ('FEMEA','MACHO')),
@@ -25,8 +25,9 @@ CREATE TABLE animals (
 );
 
 CREATE INDEX idx_animals_user ON animals(user_id);
-CREATE INDEX idx_animals_code ON animals(code);
-CREATE INDEX idx_animals_species ON animals(species);
+CREATE UNIQUE INDEX idx_animals_code ON animals(user_id, code);
+CREATE INDEX idx_animals_species ON animals(user_id, species);
+
 
 -- ───────────────────────────────────────────────────────────────
 -- 2. TABELA: reproductive_cycles
