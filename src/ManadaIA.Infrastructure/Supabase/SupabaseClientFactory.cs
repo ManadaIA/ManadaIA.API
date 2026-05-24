@@ -4,21 +4,23 @@ namespace ManadaIA.Infrastructure.Supabase;
 
 public static class SupabaseClientFactory
 {
-    public static async Task<Client> CreateAsync(SupabaseSettings settings)
+    public static async Task<Client> CreateAsync(SupabaseSettings settings, string accessToken)
     {
         var options = new SupabaseOptions
         {
             AutoConnectRealtime = false,
-            AutoRefreshToken = true
+            AutoRefreshToken = false
         };
 
         var client = new Client(
             settings.Url,
-            settings.ServiceRoleKey,
+            settings.AnonKey,
             options
         );
 
         await client.InitializeAsync();
+
+        await client.Auth.SetSession(accessToken, string.Empty);
 
         return client;
     }

@@ -103,5 +103,3 @@ CREATE POLICY "users_own_predictions" ON ai_predictions
             AND animals.user_id = auth.uid()
         )
     );
-
-COMMIT;

@@ -1,6 +1,6 @@
+using ManadaIA.Infrastructure.Supabase;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 namespace ManadaIA.API.Extensions;
 
@@ -10,8 +10,9 @@ public static class AuthExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var jwtSecret = configuration["Supabase:JwtSecret"]
-            ?? throw new InvalidOperationException("JWT Secret não configurado");
+        SupabaseSettings supabaseSettings = configuration
+            .GetSection(SupabaseSettings.SectionName)
+            .Get<SupabaseSettings>() ?? throw new InvalidOperationException("Configuração do Supabase não encontrada");
 
         services
             .AddAuthentication(options =>
@@ -21,15 +22,20 @@ public static class AuthExtensions
             })
             .AddJwtBearer(options =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
+                options.Authority = $"{supabaseSettings.Url}/auth/v1"; // ES256
+
+                options.TokenValidationParameters = new()
                 {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
-                    ValidateIssuer = false,
+                    ValidateIssuer = true,
+                    ValidIssuer = $"{supabaseSettings.Url}/auth/v1",
+
                     ValidateAudience = false,
+
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.Zero
                 };
+
+                options.RequireHttpsMetadata = true;
 
                 options.Events = new JwtBearerEvents
                 {

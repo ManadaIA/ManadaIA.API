@@ -1,6 +1,7 @@
 using ManadaIA.Domain.Interfaces;
 using ManadaIA.Infrastructure.Repositories;
 using ManadaIA.Infrastructure.Supabase;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,16 +16,33 @@ public static class InfrastructureExtensions
         // Supabase Settings
         var supabaseSettings = configuration
             .GetSection(SupabaseSettings.SectionName)
-            .Get<SupabaseSettings>() ?? throw new InvalidOperationException(
-                "Configuração do Supabase não encontrada");
+            .Get<SupabaseSettings>() ?? throw new InvalidOperationException("Configuração do Supabase não encontrada");
 
         services.AddSingleton(supabaseSettings);
 
-        // Supabase Client
-        services.AddSingleton(sp =>
+        // Supabase Client        
+        services.AddHttpContextAccessor();
+        services.AddScoped(sp =>
         {
             var settings = sp.GetRequiredService<SupabaseSettings>();
-            return SupabaseClientFactory.CreateAsync(settings).GetAwaiter().GetResult();
+
+            var httpContextAccessor =
+                sp.GetRequiredService<IHttpContextAccessor>();
+
+            var httpContext = httpContextAccessor.HttpContext
+                ?? throw new InvalidOperationException("HttpContext não encontrado");
+
+            var authHeader = httpContext.Request.Headers.Authorization.ToString();
+
+            if (string.IsNullOrWhiteSpace(authHeader))
+                throw new UnauthorizedAccessException("Token não informado");
+
+            var token = authHeader.Replace("Bearer ", "");
+
+            return SupabaseClientFactory
+                .CreateAsync(settings, token)
+                .GetAwaiter()
+                .GetResult();
         });
 
         // Repositories

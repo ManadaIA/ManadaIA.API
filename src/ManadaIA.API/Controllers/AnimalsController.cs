@@ -91,9 +91,8 @@ public sealed class AnimalsController(IAnimalService animalService) : Controller
 
     private Guid GetUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                          ?? User.FindFirst("sub")?.Value;
-        
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value?? User.FindFirst("sub")?.Value;
+
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             throw new UnauthorizedAccessException("Usuário não autenticado");
 
