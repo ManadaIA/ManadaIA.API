@@ -1,3 +1,5 @@
+using ManadaIA.Application.ExternalServices;
+using ManadaIA.Application.ExternalServices.Interfaces;
 using ManadaIA.Domain.Interfaces;
 using ManadaIA.Infrastructure.Repositories;
 using ManadaIA.Infrastructure.Settings;
@@ -18,6 +20,15 @@ public static class InfrastructureExtensions
             .Get<SupabaseSettings>() ?? throw new InvalidOperationException("Configuração do Supabase não encontrada");
 
         services.AddSingleton(supabaseSettings);
+
+        // HttpClient for Supabase
+        services.AddHttpClient("Supabase", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(supabaseSettings.Timeout);
+        });
+        // ToDo: Configurar Polly para retry
+
+        services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 
         // Supabase Client        
         services.AddHttpContextAccessor();

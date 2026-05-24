@@ -24,7 +24,6 @@ builder.Host.UseSerilog((context, loggerConfig) =>
 // ══════════════════════════════════════════
 builder.Services
     .AddApplicationServices()
-    .AddApplicationExternalServices()
     .AddInfrastructureServices(builder.Configuration)
     .AddSupabaseAuth(builder.Configuration);
 

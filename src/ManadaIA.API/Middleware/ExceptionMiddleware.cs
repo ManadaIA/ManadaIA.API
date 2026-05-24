@@ -7,9 +7,7 @@ namespace ManadaIA.API.Middleware;
 /// Middleware global de tratamento de exceções
 /// Retorna RFC 7807 ProblemDetails
 /// </summary>
-public sealed class ExceptionMiddleware(
-    RequestDelegate next,
-    ILogger<ExceptionMiddleware> logger)
+public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
     {

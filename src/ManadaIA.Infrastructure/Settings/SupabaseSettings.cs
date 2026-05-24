@@ -6,5 +6,5 @@ public sealed class SupabaseSettings
 
     public string Url { get; init; } = string.Empty;
     public string AnonKey { get; init; } = string.Empty;
-    public string ServiceRoleKey { get; init; } = string.Empty;
+    public short Timeout { get; init; } = 30;
 }
