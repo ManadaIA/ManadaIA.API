@@ -72,6 +72,38 @@ CREATE INDEX idx_predictions_animal ON ai_predictions(animal_id);
 CREATE INDEX idx_predictions_cycle ON ai_predictions(cycle_id);
 CREATE INDEX idx_predictions_date ON ai_predictions(prediction_date DESC);
 
+-- ───────────────────────────────────────────────────────────────
+-- 4. TABELA: notification_parameters (Configuração Global)
+-- ───────────────────────────────────────────────────────────────
+CREATE TABLE notification_parameters (
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    key                  VARCHAR(100) NOT NULL,
+    group_type           VARCHAR(50) NOT NULL CHECK (group_type IN ('WHATSAPP', 'EMAIL', 'PUSH')),
+    name                 VARCHAR(150) NOT NULL,
+    description          TEXT,
+    is_default_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_notification_parameters_key ON notification_parameters(key);
+CREATE UNIQUE INDEX idx_notification_parameters_key_group ON notification_parameters(key, group_type);
+CREATE INDEX idx_notification_parameters_group_type ON notification_parameters(group_type);
+
+-- ───────────────────────────────────────────────────────────────
+-- 5. TABELA: user_notification_settings (Apenas Customizações)
+-- ───────────────────────────────────────────────────────────────
+CREATE TABLE user_notification_settings (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id          UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    parameter_id     UUID NOT NULL REFERENCES notification_parameters(id) ON DELETE CASCADE,
+    is_enabled       BOOLEAN NOT NULL,
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_notification_settings_user ON user_notification_settings(user_id);
+CREATE UNIQUE INDEX idx_user_notification_settings_user_parameter ON user_notification_settings(user_id, parameter_id);
+CREATE INDEX idx_notification_parameters_parameter ON user_notification_settings(parameter_id);
+
 -- ═══════════════════════════════════════════════════════════════
 -- ROW LEVEL SECURITY (RLS) - LGPD
 -- ═══════════════════════════════════════════════════════════════
@@ -80,6 +112,8 @@ CREATE INDEX idx_predictions_date ON ai_predictions(prediction_date DESC);
 ALTER TABLE animals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reproductive_cycles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_predictions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_parameters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_notification_settings ENABLE ROW LEVEL SECURITY;
 
 -- Política: usuário vê apenas seus próprios animais
 CREATE POLICY "users_own_animals" ON animals
@@ -104,3 +138,8 @@ CREATE POLICY "users_own_predictions" ON ai_predictions
             AND animals.user_id = auth.uid()
         )
     );
+
+-- Políticas de Segurança (Todos podem ler os parâmetros globais, mas só o usuário altera suas configs)
+CREATE POLICY "allow_read_global_parameters" ON notification_parameters FOR SELECT USING (true);
+CREATE POLICY "users_manage_own_settings" ON user_notification_settings FOR ALL USING (auth.uid() = user_id);
+
